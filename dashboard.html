@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Employee Dashboard</h2>
+
+    <form id="employeeForm">
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="text" id="position" placeholder="Position" required />
+      <button type="submit">Add Employee</button>
+    </form>
+
+    <table id="employeeTable">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Position</th><th>Actions</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const API_URL = 'http://localhost:5000/api/employees';
+
+    async function fetchEmployees() {
+      const res = await fetch(API_URL, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const employees = await res.json();
+      const tbody = document.querySelector('#employeeTable tbody');
+      tbody.innerHTML = '';
+      employees.forEach(emp => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${emp.name}</td>
+            <td>${emp.email}</td>
+            <td>${emp.position}</td>
+            <td>
+              <button onclick="deleteEmployee(${emp.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const position = document.getElementById('position').value;
+
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, email, position })
+      });
+      fetchEmployees();
+    });
+
+    async function deleteEmployee(id) {
+      await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      fetchEmployees();
+    }
+
+    fetchEmployees();
+  </script>
+</body>
+</html>
